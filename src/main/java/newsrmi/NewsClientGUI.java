@@ -10,9 +10,64 @@ import javax.swing.border.LineBorder;
 
 public class NewsClientGUI {
     private static boolean darkMode = false;
+    public static String getIPAddress() {
+        String[] options = {"Use localhost", "Enter IP Address"};
+        int choice = JOptionPane.showOptionDialog(
+                null,
+                "Select an option to connect:",
+                "Connection Setup",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[0]
+        );
 
+        String ipAddress;
+
+        if (choice == 0) {
+            ipAddress = "127.0.0.1";
+        } else if (choice == 1) {
+            ipAddress = JOptionPane.showInputDialog(null, "Enter IP Address:", "Input IP", JOptionPane.QUESTION_MESSAGE);
+            if (ipAddress == null || ipAddress.trim().isEmpty()) {
+                ipAddress = "127.0.0.1"; // fallback
+            }
+        } else {
+            return null; // User canceled
+        }
+
+        return ipAddress;
+    }
+    public static String getPort() {
+        String port;
+
+        while (true) {
+            port = JOptionPane.showInputDialog(null, "Enter port:", "Input Port", JOptionPane.QUESTION_MESSAGE);
+
+            if (port == null || port.trim().isEmpty()) {
+                return "1099"; // default fallback
+            }
+
+            try {
+                int portNum = Integer.parseInt(port.trim());
+                if (portNum >= 0 && portNum <= 65535) {
+                    return String.valueOf(portNum);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Port must be between 0 and 65535.");
+                }
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(null, "Please enter a valid number.");
+            }
+        }
+    }
     public static void main(String[] args) {
+
+
         SwingUtilities.invokeLater(() -> {
+            String ipAddress = getIPAddress();
+            String port = getPort();
+            System.out.println("Connected to " + ipAddress);
+            System.out.println("Connected to " + port);
             // Create main frame with modern look
             JFrame frame = new JFrame("📰 News RMI Client");
             frame.setSize(600, 450);
@@ -140,7 +195,7 @@ public class NewsClientGUI {
                     @Override
                     protected Void doInBackground() {
                         try {
-                            NewsInterface stub = (NewsInterface) Naming.lookup("rmi://localhost:1099/NewsService");
+                            NewsInterface stub = (NewsInterface) Naming.lookup("rmi://"+ipAddress+":"+port+"/NewsService");
                             List<String> headlines = stub.getNewsHeadlines(topic);
 
                             StringBuilder formatted = new StringBuilder("Top News Headlines for '" + topic + "':\n\n");
